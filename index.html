@@ -1,0 +1,218 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CGSI · Context-Grounded Skill Internalization</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="manuscript.css">
+
+<main id="top"><section class="light-table" aria-labelledby="paper-title">
+<div class="margin-impressions" aria-hidden="true"><span class="opening-impression">“</span><span class="closing-impression">”</span><i class="margin-fragment fragment-left"></i><i class="margin-fragment fragment-right"></i></div>
+<div class="ms-wrap">
+<div class="ms-mast">
+  <div><h1 id="paper-title">Context-Grounded Skill Internalization <em>for Vision-Language Agents</em></h1></div>
+  <div class="ms-credits"><p class="byline">Jinlin Liu · Yumeng He · Qihan Huang<sup>*</sup> · Kevin Qinghong Lin<sup>†</sup> · Han Peng<sup>†</sup></p>
+    <p class="institutions">Ant Group · The University of Hong Kong · Shanghai Jiao Tong University · University of Oxford<br>* Project lead &nbsp; · &nbsp; † Corresponding authors</p>
+  </div>
+  <div class="resource-links" role="group" aria-label="Project resources">
+    <a href="assets/paper.pdf">Paper (PDF)</a>
+    <a href="https://github.com/jinlinll/cgsi">GitHub</a>
+  </div>
+</div>
+<section class="first-glance" aria-labelledby="glance-summary">
+  <h2 id="glance-summary">After skill internalization, an agent may say it followed a skill even when no skill was provided at test time.</h2>
+  <div class="glance-pair">
+    <div class="glance-input"><p class="glance-label">Test input</p><p class="glance-line">Task description.</p><p class="glance-annotation" role="note">No skill at test time.</p></div>
+    <div class="glance-output"><p class="glance-label">Trained agent’s response</p><p class="glance-quote">“<em>According to the skills</em>, …”</p></div>
+  </div>
+  <p class="glance-finding">We systematically study this problem and show how to reduce such claims.</p>
+  <button class="explain-trigger" type="button" aria-haspopup="dialog" aria-controls="training-explanation">How does this happen?</button>
+</section>
+</div>
+<a class="scroll-cue" href="#case">Scroll to explore the paper<span aria-hidden="true">↓</span></a>
+</section>
+<dialog id="training-explanation" aria-labelledby="explanation-title">
+  <div class="dialog-head"><h2 id="explanation-title">Why does the agent cite a missing skill?</h2><button class="dialog-close" type="button" autofocus>Close</button></div>
+<figure class="imprint" aria-labelledby="imprint-caption">
+  <div class="imprint-art" aria-hidden="true">
+    <div class="vellum"><b>Task guidance</b>
+      <svg class="guidance-lines" viewBox="0 0 160 22" aria-hidden="true" focusable="false">
+        <path d="M2 5 q5 -3.5 10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0"/>
+        <path d="M2 16 q5 -3.5 10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0 t10 0"/>
+      </svg>
+    </div>
+    <div class="manuscript-leaf">
+      <div class="leaf-heading">Agent response · excerpt</div>
+      <div class="ink-line citation-ink">According to the task guidance,</div>
+      <div class="ink-line">I need to …</div>
+    </div>
+  </div>
+  <figcaption id="imprint-caption">
+    <p class="stage-note sampling-note">The agent uses a guide <em>to solve the task.</em></p>
+    <p class="stage-note training-note">A common training approach keeps the answer but <em>removes the guide.</em></p>
+    <p class="stage-note result-note"><b>Context misalignment</b><br>The answer still cites a guide that is missing from the training input.</p>
+    <button class="imprint-replay" type="button" hidden>Replay animation</button>
+  </figcaption>
+</figure>
+</dialog>
+<header><div class="wrap nav"><a href="#top" class="brand"><i aria-hidden="true">▧</i> CGSI</a><nav><a href="#case">Example</a><a href="#method">Method</a><a href="#results">Results</a></nav><a class="mini" href="assets/paper.pdf">Paper ↗</a></div></header>
+<section class="wrap hero" id="case"><div class="intro"><p class="kicker">Skill internalization</p><h2>The guide is gone.<br>Why cite it?</h2><p class="lead">A common way to internalize a skill is to generate demonstration trajectories with the skill in context using the model itself, and then fine-tune the same model on them with the skill removed. It changes the training input but keeps the supervision target, so the model learns to reproduce what it wrote with the skill.</p><p class="why">At test time, the trained agent can still say it consulted that guide. Our method, CGSI, corrects the training signal so the agent can use what it learned without crediting a guide it never received on this task.</p><div class="buttons"><a class="primary" href="#method">How CGSI works ↓</a><a class="plain" href="assets/paper.pdf">Read the paper ↗</a></div></div>
+<article class="case"><div class="cap"><strong>Same task for both trained models</strong><span>ALFWorld · First turn</span></div><p class="task">Look at the laptop under the desk lamp.</p><div class="scene"><img src="assets/scene.webp" alt="Illustration of the desk and side table the agent can search."></div><div class="response"><p class="conditions"><strong>At test time</strong> Both models see the room description and task. Neither receives a skill.</p><div class="examplelabel">Baseline · after standard skill internalization</div><blockquote>“<mark>According to the skills</mark>, I should first locate the desklamp since it’s likely on a desk or sidetable.”</blockquote><div class="examplelabel corrected">Our method · after CGSI (Mask) training</div><blockquote>“First, I should locate the desklamp, which is most likely on a desk or sidetable.”</blockquote><div class="action"><span>First action in both runs</span><strong>go to desk 1</strong></div><p class="outcome">Both complete the task. The CGSI agent explains where to search using what it knows about desk lamps.</p><details class="other"><summary>Compare the third training method</summary><p>CGSI (Rewrite) also chooses the desk. Its reasoning begins:</p><q>First, I should navigate to furniture that commonly hosts a desklamp, such as the desk or sidetable, …</q></details></div></article></section><section class="wrap method" id="method"><p class="kicker">From example to explanation</p><h2>How a reference survives after the guide is removed.</h2><div class="methodgrid"><div><h3>Learn with a guide</h3><p>During training, an agent gets a written guide called a <em>skill</em>. Its successful answers become examples for teaching it to act on its own.</p></div><div><h3>Remove the guide</h3><p>A common recipe removes the guide from each training input but keeps the answer. Phrases like “according to the skills” remain in the text the agent learns to produce.</p></div><div><h3>Correct the example</h3><p>Our method, CGSI, detects sentences that cite the missing guide. It skips those words when computing the training loss (Mask), or rewrites the sentence (Rewrite).</p></div></div><details><summary>View the method diagram</summary><img src="assets/method.webp" alt="Detector training and context-grounded supervised fine-tuning workflow from the paper."></details></section><section id="results" class="evidence" aria-labelledby="results-title"><div class="wrap">
+<div class="evidence-head"><h2 id="results-title">Experimental results</h2>
+<nav aria-label="Experimental results"><a href="#main-table">Main table</a><a href="#mask-comparison">Masking comparison</a><a href="#rl-results">RL tables</a></nav></div>
+<article class="evidence-spread">
+  <div class="evidence-copy"><h3>How often does skill removal leave unsupported references in successful demonstrations?</h3>
+  <p>When the skill is removed, 18–75% of successful demonstrations contain at least one reference that loses its support. On ARC-AGI-1 with the 9B model, this happens in 1,721 of 2,281 successful trajectories.</p></div>
+  <table class="heatmap"><caption>Successful trajectories with an unsupported reference after skill removal</caption>
+  <thead><tr><th scope="col">Qwen3.5</th><th scope="col">ALFWorld</th><th scope="col">WebShop</th><th scope="col">ARC-AGI-1</th></tr></thead><tbody><tr><th scope="row">4B</th><td style="--heat:19%"><strong>33.97%</strong><small>412 / 1,213</small></td><td style="--heat:37%"><strong>64.79%</strong><small>322 / 497</small></td><td style="--heat:25%"><strong>43.95%</strong><small>552 / 1,256</small></td></tr><tr><th scope="row">9B</th><td style="--heat:23%"><strong>40.28%</strong><small>518 / 1,286</small></td><td style="--heat:10%"><strong>18.34%</strong><small>104 / 567</small></td><td style="--heat:43%"><strong>75.45%</strong><small>1,721 / 2,281</small></td></tr></tbody></table>
+</article>
+<article id="main-table" class="main-results"><h3>Can CGSI reduce CoMi while preserving task success?</h3>
+<p>Across six full-parameter settings, CGSI (Mask) reduces CoMi by 72.5–94.6% relative to SFT (skill dropped). On WebShop with Qwen3.5-4B, CoMi falls from 46.0% to 3.4%, while task success goes from 39.2% to 41.6%.</p>
+<div class="matrix-controls">
+<label>Model <select id="model-choice"><option>4B</option><option>9B</option></select></label>
+<label>Training <select id="mode-choice"><option value="Full">Full-parameter SFT</option><option value="LoRA">LoRA (rank 16)</option></select></label>
+<label class="audit-choice"><input id="audit-choice" type="checkbox"> Show VLM Audit baselines</label>
+</div>
+<div class="matrix-scroll" tabindex="0" role="region" aria-label="Task success and CoMi by method"><div class="matrix-view" data-config="Full-4B">
+      <table class="result-matrix"><caption>Qwen3.5-4B · Full-parameter SFT</caption>
+      <thead><tr><th rowspan="2" scope="col">Method</th><th colspan="2" scope="colgroup">ALFWorld</th><th colspan="2" scope="colgroup">WebShop</th><th colspan="2" scope="colgroup">ARC-AGI-1</th></tr>
+      <tr><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th></tr></thead>
+      <tbody><tr><th scope="row">Base</th><td>39.4</td><td>1.5</td><td>6.8</td><td>0.6</td><td>2.00</td><td>0.00</td></tr><tr><th scope="row">SFT (skill kept)</th><td>76.3</td><td>1.8</td><td>35.4</td><td>1.4</td><td>5.25</td><td>0.00</td></tr><tr><th scope="row">SFT (skill dropped)</th><td>83.9</td><td>16.1</td><td>39.2</td><td>46.0</td><td>13.25</td><td>15.75</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>85.0</td><td>4.4</td><td>41.6</td><td>3.4</td><td>16.75</td><td>1.25</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>85.4</td><td>1.8</td><td>37.4</td><td>13.2</td><td>9.75</td><td>1.25</td></tr><tr data-audit hidden><th scope="row">VLM Audit (Mask)</th><td>80.3</td><td>1.1</td><td>38.4</td><td>6.4</td><td>11.50</td><td>1.00</td></tr><tr data-audit hidden><th scope="row">VLM Audit (Rewrite)</th><td>79.2</td><td>1.5</td><td>34.8</td><td>4.6</td><td>11.50</td><td>1.00</td></tr></tbody></table></div><div class="matrix-view" data-config="Full-9B" hidden>
+      <table class="result-matrix"><caption>Qwen3.5-9B · Full-parameter SFT</caption>
+      <thead><tr><th rowspan="2" scope="col">Method</th><th colspan="2" scope="colgroup">ALFWorld</th><th colspan="2" scope="colgroup">WebShop</th><th colspan="2" scope="colgroup">ARC-AGI-1</th></tr>
+      <tr><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th></tr></thead>
+      <tbody><tr><th scope="row">Base</th><td>48.2</td><td>0.4</td><td>6.6</td><td>0.0</td><td>7.00</td><td>0.00</td></tr><tr><th scope="row">SFT (skill kept)</th><td>74.8</td><td>2.2</td><td>43.0</td><td>0.2</td><td>20.00</td><td>0.00</td></tr><tr><th scope="row">SFT (skill dropped)</th><td>82.8</td><td>33.9</td><td>46.8</td><td>12.2</td><td>27.50</td><td>37.25</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>85.8</td><td>1.8</td><td>47.0</td><td>1.0</td><td>29.50</td><td>10.25</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>83.6</td><td>2.6</td><td>49.2</td><td>0.8</td><td>29.50</td><td>6.00</td></tr><tr data-audit hidden><th scope="row">VLM Audit (Mask)</th><td>83.6</td><td>6.6</td><td>48.8</td><td>1.6</td><td>30.00</td><td>7.50</td></tr><tr data-audit hidden><th scope="row">VLM Audit (Rewrite)</th><td>79.6</td><td>1.5</td><td>54.8</td><td>1.2</td><td>29.50</td><td>4.75</td></tr></tbody></table></div><div class="matrix-view" data-config="LoRA-4B" hidden>
+      <table class="result-matrix"><caption>Qwen3.5-4B · LoRA (rank 16)</caption>
+      <thead><tr><th rowspan="2" scope="col">Method</th><th colspan="2" scope="colgroup">ALFWorld</th><th colspan="2" scope="colgroup">WebShop</th><th colspan="2" scope="colgroup">ARC-AGI-1</th></tr>
+      <tr><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th></tr></thead>
+      <tbody><tr><th scope="row">SFT (skill kept)</th><td>51.8</td><td>0.4</td><td>11.0</td><td>0.2</td><td>2.25</td><td>0.00</td></tr><tr><th scope="row">SFT (skill dropped)</th><td>80.3</td><td>16.4</td><td>36.6</td><td>79.8</td><td>13.25</td><td>11.50</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>79.9</td><td>1.5</td><td>38.6</td><td>14.6</td><td>12.25</td><td>1.50</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>76.3</td><td>0.0</td><td>37.4</td><td>16.2</td><td>14.00</td><td>2.25</td></tr><tr data-audit hidden><th scope="row">VLM Audit (Rewrite)</th><td>81.8</td><td>1.1</td><td>39.8</td><td>13.0</td><td>13.75</td><td>1.25</td></tr></tbody></table></div><div class="matrix-view" data-config="LoRA-9B" hidden>
+      <table class="result-matrix"><caption>Qwen3.5-9B · LoRA (rank 16)</caption>
+      <thead><tr><th rowspan="2" scope="col">Method</th><th colspan="2" scope="colgroup">ALFWorld</th><th colspan="2" scope="colgroup">WebShop</th><th colspan="2" scope="colgroup">ARC-AGI-1</th></tr>
+      <tr><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th><th scope="col">Success ↑</th><th scope="col">CoMi ↓</th></tr></thead>
+      <tbody><tr><th scope="row">SFT (skill kept)</th><td>60.2</td><td>0.7</td><td>13.4</td><td>0.2</td><td>6.25</td><td>0.00</td></tr><tr><th scope="row">SFT (skill dropped)</th><td>83.9</td><td>28.8</td><td>42.2</td><td>14.6</td><td>29.25</td><td>43.50</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>81.8</td><td>6.9</td><td>42.4</td><td>1.6</td><td>32.50</td><td>12.25</td></tr><tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>83.2</td><td>0.7</td><td>43.6</td><td>2.0</td><td>36.25</td><td>6.50</td></tr><tr data-audit hidden><th scope="row">VLM Audit (Rewrite)</th><td>82.5</td><td>2.2</td><td>40.2</td><td>1.2</td><td>36.00</td><td>5.00</td></tr></tbody></table></div></div>
+<p class="data-note">Both metrics are percentages. CoMi counts test trajectories with at least one unsupported reference. All models are evaluated without the skill, on 274 ALFWorld, 500 WebShop, and 400 ARC-AGI-1 tasks.</p>
+</article>
+<article id="mask-comparison" class="evidence-spread"><div class="evidence-copy"><h3>Does it matter which sentences are masked?</h3>
+<p>On WebShop, random masking and CGSI mask the same number of sentences. The 4B agent still cites missing guidance in 49.4% of test trajectories after random masking, compared with 3.4% after detector-selected masking.</p></div>
+<figure class="selector-plot"><figcaption>Test CoMi · WebShop, Qwen3.5-4B</figcaption><div class="selector-row"><div><strong>SFT (skill dropped)</strong><small>No sentences masked</small></div><div class="bar-scale"><i style="width:92.0%"></i></div><b>46.0%</b></div><div class="selector-row"><div><strong>Random masking</strong><small>893 sentences · 1.07% of tokens</small></div><div class="bar-scale"><i style="width:98.8%"></i></div><b>49.4%</b></div><div class="selector-row"><div><strong>CGSI (Mask)</strong><small>893 sentences · 1.21% of tokens</small></div><div class="bar-scale"><i style="width:6.8%"></i></div><b>3.4%</b></div><p class="data-note">Full-parameter SFT. One run per configuration and one random draw.</p></figure></article>
+<details open id="rl-results" class="more-result"><summary>How much CoMi remains after RL without the skill?</summary><p>After 60 skill-free GRPO updates on ALFWorld and WebShop, task success improves from every initialization. Models initialized from SFT (skill dropped) still show CoMi in 8.4–35.2% of test trajectories, compared with 0.4–5.2% for the corrected initializations.</p>
+<label class="rl-setting">Evaluation setting <select id="rl-setting">
+<option value="ALFWorld-4B">ALFWorld · Qwen3.5-4B</option>
+<option value="ALFWorld-9B">ALFWorld · Qwen3.5-9B</option>
+<option value="WebShop-4B">WebShop · Qwen3.5-4B</option>
+<option value="WebShop-9B">WebShop · Qwen3.5-9B</option>
+</select></label>
+<div class="rl-tables" data-rl-setting="ALFWorld-4B">
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>Task success (%) by number of GRPO updates</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">0</th>
+<th scope="col">10</th>
+<th scope="col">20</th>
+<th scope="col">30</th>
+<th scope="col">40</th>
+<th scope="col">50</th>
+<th scope="col">60</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>83.9</td><td>85.0</td><td>89.4</td><td>90.5</td><td>92.0</td><td>94.2</td><td>93.4</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>79.2</td><td>85.4</td><td>90.1</td><td>89.8</td><td>93.4</td><td>95.6</td><td>93.4</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>85.0</td><td>89.1</td><td>90.1</td><td>94.9</td><td>94.5</td><td>96.0</td><td>96.4</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>85.4</td><td>88.7</td><td>90.1</td><td>92.0</td><td>91.2</td><td>93.1</td><td>95.6</td></tr>
+</tbody></table></div>
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>CoMi (%) before and after GRPO</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">Before RL</th>
+<th scope="col">After 60 updates</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>16.1</td><td>13.9</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>1.5</td><td>0.4</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>4.4</td><td>1.8</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>1.8</td><td>0.4</td></tr>
+</tbody></table></div>
+</div>
+<div class="rl-tables" data-rl-setting="ALFWorld-9B" hidden>
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>Task success (%) by number of GRPO updates</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">0</th>
+<th scope="col">10</th>
+<th scope="col">20</th>
+<th scope="col">30</th>
+<th scope="col">40</th>
+<th scope="col">50</th>
+<th scope="col">60</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>82.8</td><td>87.2</td><td>83.2</td><td>88.3</td><td>89.8</td><td>89.1</td><td>92.0</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>79.6</td><td>84.3</td><td>87.6</td><td>85.4</td><td>88.7</td><td>90.1</td><td>87.6</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>85.8</td><td>86.9</td><td>88.3</td><td>86.1</td><td>90.5</td><td>92.7</td><td>91.2</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>83.6</td><td>83.2</td><td>84.7</td><td>86.5</td><td>88.3</td><td>90.5</td><td>93.1</td></tr>
+</tbody></table></div>
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>CoMi (%) before and after GRPO</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">Before RL</th>
+<th scope="col">After 60 updates</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>33.9</td><td>27.7</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>1.5</td><td>2.9</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>1.8</td><td>2.9</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>2.6</td><td>0.7</td></tr>
+</tbody></table></div>
+</div>
+<div class="rl-tables" data-rl-setting="WebShop-4B" hidden>
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>Task success (%) by number of GRPO updates</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">0</th>
+<th scope="col">10</th>
+<th scope="col">20</th>
+<th scope="col">30</th>
+<th scope="col">40</th>
+<th scope="col">50</th>
+<th scope="col">60</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>39.2</td><td>47.2</td><td>52.2</td><td>54.2</td><td>61.0</td><td>65.4</td><td>62.8</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>34.8</td><td>43.8</td><td>49.8</td><td>54.6</td><td>59.0</td><td>61.8</td><td>65.8</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>41.6</td><td>51.8</td><td>59.0</td><td>60.8</td><td>61.0</td><td>67.0</td><td>65.0</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>37.4</td><td>47.0</td><td>53.2</td><td>61.2</td><td>61.2</td><td>62.2</td><td>65.8</td></tr>
+</tbody></table></div>
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>CoMi (%) before and after GRPO</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">Before RL</th>
+<th scope="col">After 60 updates</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>46.0</td><td>35.2</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>4.6</td><td>1.2</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>3.4</td><td>3.8</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>13.2</td><td>5.2</td></tr>
+</tbody></table></div>
+</div>
+<div class="rl-tables" data-rl-setting="WebShop-9B" hidden>
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>Task success (%) by number of GRPO updates</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">0</th>
+<th scope="col">10</th>
+<th scope="col">20</th>
+<th scope="col">30</th>
+<th scope="col">40</th>
+<th scope="col">50</th>
+<th scope="col">60</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>46.8</td><td>51.6</td><td>56.0</td><td>59.2</td><td>58.8</td><td>61.0</td><td>61.4</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>54.8</td><td>54.8</td><td>57.0</td><td>60.0</td><td>62.6</td><td>64.6</td><td>68.6</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>47.0</td><td>53.8</td><td>51.2</td><td>54.4</td><td>59.4</td><td>61.4</td><td>60.6</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>49.2</td><td>51.2</td><td>54.6</td><td>60.2</td><td>61.0</td><td>60.6</td><td>64.0</td></tr>
+</tbody></table></div>
+<div class="rl-table-scroll"><table class="rl-table">
+<caption>CoMi (%) before and after GRPO</caption>
+<thead><tr><th scope="col">SFT initialization</th>
+<th scope="col">Before RL</th>
+<th scope="col">After 60 updates</th>
+</tr></thead><tbody>
+<tr><th scope="row">SFT (skill dropped)</th><td>12.2</td><td>8.4</td></tr>
+<tr><th scope="row">VLM Audit (Rewrite)</th><td>1.2</td><td>0.6</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Mask)</th><td>1.0</td><td>0.6</td></tr>
+<tr class="cgsi-row"><th scope="row">CGSI (Rewrite)</th><td>0.8</td><td>1.6</td></tr>
+</tbody></table></div>
+</div>
+</details>
+<details class="more-result"><summary>Does asking the teacher not to mention the skill reduce CoMi in its demonstrations?</summary><p>On 1,000 ALFWorld tasks, adding that instruction raises removal-induced CoMi from <strong>38.9% to 51.9%</strong>. Some responses cite the prohibition itself:</p><blockquote>“The system instructions say not to mention the skill or its contents in thinking.”</blockquote></details>
+</div></section>
+</main><footer><div class="wrap foot"><strong>CGSI</strong><a href="assets/paper.pdf">Paper ↗</a><a href="assets/paper.pdf#page=12">Supplementary material ↗</a><a href="#top">Back to top ↑</a></div></footer><script src="manuscript.js"></script><script src="app.js"></script></html>
