@@ -1,0 +1,27 @@
+app.js
+  s_f63829bd6e3c4d::t_4f70f0959df27c 1-27
+index.html
+  s_f63829bd6e3c4d::t_12492e618efee5 1-218
+manuscript.css
+  s_f63829bd6e3c4d::t_72a85f5f68ff2e 1-272
+manuscript.js
+  s_f63829bd6e3c4d::t_163192981bedff 1-84
+style.css
+  s_f63829bd6e3c4d::t_362b9e1b82bef4 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "01be6cfbf269e29c882ff81428b2fc7a79d2c27f",
+  "prompts": {},
+  "sessions": {
+    "s_f63829bd6e3c4d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17cba-4ef1-7c31-a3a1-72bf96b970c6",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "刘锦林 <liujinlin@U-DFWHN9YV-0325.local>"
+    }
+  }
+}
