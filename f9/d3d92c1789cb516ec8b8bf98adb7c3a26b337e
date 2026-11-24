@@ -1,0 +1,19 @@
+index.html
+  s_f63829bd6e3c4d::t_09835580a8bbd1 12,52-53,218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "f9d3d92c1789cb516ec8b8bf98adb7c3a26b337e",
+  "prompts": {},
+  "sessions": {
+    "s_f63829bd6e3c4d": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a17cba-4ef1-7c31-a3a1-72bf96b970c6",
+        "model": "gpt-6.2-astra"
+      },
+      "human_author": "刘锦林 <liujinlin@U-DFWHN9YV-0325.local>"
+    }
+  }
+}
